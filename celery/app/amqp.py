@@ -46,6 +46,9 @@ class Queues(dict):
         create_missing (bool): By default any unknown queues will be
             added automatically, but if this flag is disabled the occurrence
             of unknown queues in `wanted` will raise :exc:`KeyError`.
+        create_missing_queue_type (str): Type of queue to create for missing queues.
+            Must be either 'classic' (default) or 'quorum'. If set to 'quorum',
+            the broker will declare new queues using the quorum type.
         max_priority (int): Default x-max-priority for queues with none set.
     """
 
@@ -54,13 +57,14 @@ class Queues(dict):
     _consume_from = None
 
     def __init__(self, queues=None, default_exchange=None,
-                 create_missing=True, autoexchange=None,
+                 create_missing=True, create_missing_queue_type = None, autoexchange=None,
                  max_priority=None, default_routing_key=None):
         super().__init__()
         self.aliases = WeakValueDictionary()
         self.default_exchange = default_exchange
         self.default_routing_key = default_routing_key
         self.create_missing = create_missing
+        self.create_missing_queue_type = create_missing_queue_type
         self.autoexchange = Exchange if autoexchange is None else autoexchange
         self.max_priority = max_priority
         if queues is not None and not isinstance(queues, Mapping):
@@ -181,7 +185,10 @@ class Queues(dict):
                 self._consume_from.pop(queue, None)
 
     def new_missing(self, name):
-        return Queue(name, self.autoexchange(name), name)
+        queue_arguments = None
+        if self.create_missing_queue_type == "quorum":
+            queue_arguments = {"x-queue-type": self.create_missing_queue_type}
+        return Queue(name, self.autoexchange(name), name, queue_arguments=queue_arguments)
 
     @property
     def consume_from(self):
@@ -238,7 +245,7 @@ class AMQP:
     def send_task_message(self):
         return self._create_task_sender()
 
-    def Queues(self, queues, create_missing=None,
+    def Queues(self, queues, create_missing=None, create_missing_queue_type = None,
                autoexchange=None, max_priority=None):
         # Create new :class:`Queues` instance, using queue defaults
         # from the current configuration.
@@ -246,6 +253,8 @@ class AMQP:
         default_routing_key = conf.task_default_routing_key
         if create_missing is None:
             create_missing = conf.task_create_missing_queues
+            if create_missing_queue_type is None:
+                create_missing_queue_type = conf.task_create_missing_queue_type
         if max_priority is None:
             max_priority = conf.task_queue_max_priority
         if not queues and conf.task_default_queue:
@@ -259,7 +268,7 @@ class AMQP:
         autoexchange = (self.autoexchange if autoexchange is None
                         else autoexchange)
         return self.queues_cls(
-            queues, self.default_exchange, create_missing,
+            queues, self.default_exchange, create_missing, create_missing_queue_type,
             autoexchange, max_priority, default_routing_key,
         )
 
