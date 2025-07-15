@@ -135,7 +135,7 @@ class test_Queues:
         assert queues[qname].queue_arguments == expected
 
     def test_missing_queue_quorum(self):
-        queues = Queues(create_missing_queue_type="quorum", 
+        queues = Queues(create_missing_queue_type="quorum",
                         create_missing_queue_exchange_type="topic")
 
         q = queues.new_missing("spontaneous")
@@ -368,7 +368,7 @@ class test_AMQP(test_AMQP_Base):
         self.app.send_task('task.create_pr')
         router = self.app.amqp.router
         assert router != router_was
-    
+
     def test_create_missing_queue_type_from_conf(self):
         self.app.conf.task_create_missing_queue_type = "quorum"
         self.app.conf.task_create_missing_queue_exchange_type = "topic"

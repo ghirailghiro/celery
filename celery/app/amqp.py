@@ -60,11 +60,12 @@ class Queues(dict):
     #: The rest of the queues are then used for routing only.
     _consume_from = None
 
-    def __init__(self, queues=None, default_exchange=None,
-                 create_missing=True, create_missing_queue_type = None,
-                 create_missing_queue_exchange_type=None,
-                 autoexchange=None,
-                 max_priority=None, default_routing_key=None):
+    def __init__(
+            self, queues=None, default_exchange=None,
+            create_missing=True, create_missing_queue_type=None,
+            create_missing_queue_exchange_type=None, autoexchange=None,
+            max_priority=None, default_routing_key=None,
+    ):
         super().__init__()
         self.aliases = WeakValueDictionary()
         self.default_exchange = default_exchange
@@ -195,7 +196,7 @@ class Queues(dict):
         queue_arguments = None
         if self.create_missing_queue_type:
             queue_arguments = {"x-queue-type": self.create_missing_queue_type}
-        
+
         if self.create_missing_queue_exchange_type:
             exchange = Exchange(name, self.create_missing_queue_exchange_type)
         else:
@@ -258,9 +259,8 @@ class AMQP:
     def send_task_message(self):
         return self._create_task_sender()
 
-    def Queues(self, queues, create_missing=None, create_missing_queue_type = None,
-               create_missing_queue_exchange_type=None,
-               autoexchange=None, max_priority=None):
+    def Queues(self, queues, create_missing=None, create_missing_queue_type=None,
+               create_missing_queue_exchange_type=None, autoexchange=None, max_priority=None):
         # Create new :class:`Queues` instance, using queue defaults
         # from the current configuration.
         conf = self.app.conf
